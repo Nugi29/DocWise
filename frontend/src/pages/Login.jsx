@@ -1,8 +1,72 @@
-import React from 'react'
+import React, { useState } from 'react'
 
 const Login = () => {
+  const [state, setState] = useState('Sign Up');
+
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [name, setName] = useState('');
+
+  const onSubmitHandler = async (e) => {
+    e.preventDefault();
+  };
+  
   return (
-    <div>login</div>
+    <form className='min-h-[80vh] flex items-center justify-center bg-gradient-to-br px-4' onSubmit={onSubmitHandler}>
+      <div className='flex flex-col gap-6 m-auto items-start p-10 min-w-[340px] sm:min-w-96 bg-white border border-gray-200 rounded-2xl text-zinc-600 text-sm shadow-2xl backdrop-blur-sm'>
+        <div className='w-full text-center'>
+          <p className='text-3xl font-bold text-gray-800 mb-2'>{state === 'Sign Up' ? 'Create Account' : 'Welcome Back'}</p>
+          <p className='text-gray-500 capitalize'>please {state === 'Sign Up' ? 'sign up' : 'log in'} to book an appointment</p>
+        </div>
+        {
+          state === 'Sign Up' && <div className='w-full'>
+            <p className='text-gray-700 font-medium mb-2'>Full Name</p>
+            <input
+              className='border border-gray-300 rounded-lg w-full p-3 mt-1 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-200 placeholder-gray-400'
+              type="text"
+              placeholder="Enter your full name"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              required
+            />
+          </div>
+        }
+
+        <div className='w-full'>
+          <p className='text-gray-700 font-medium mb-2'>Email</p>
+          <input
+            className='border border-gray-300 rounded-lg w-full p-3 mt-1 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-200 placeholder-gray-400'
+            type="email"
+            placeholder="Enter your email address"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+          />
+        </div>
+        <div className='w-full'>
+          <p className='text-gray-700 font-medium mb-2'>Password</p>
+          <input
+            className='border border-gray-300 rounded-lg w-full p-3 mt-1 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-200 placeholder-gray-400'
+            type="password"
+            placeholder="Enter your password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+          />
+        </div>
+        <button className='bg-primary hover:bg-primary/90 text-white w-full py-3 rounded-lg text-base font-semibold transition-all duration-200 shadow-md hover:shadow-lg transform hover:-translate-y-0.5 mt-2'>
+          {state === 'Sign Up' ? 'Create Account' : 'Login'}
+        </button>
+
+        <div className='w-full text-center'>
+          {
+            state === 'Sign Up'
+              ? <p className='text-gray-600'>Already have an account? <span onClick={() => setState('Login')} className='text-primary font-semibold hover:text-primary/80 cursor-pointer transition-colors duration-200'>Login here</span></p>
+              : <p className='text-gray-600'>Create an account? <span onClick={() => setState('Sign Up')} className='text-primary font-semibold hover:text-primary/80 cursor-pointer transition-colors duration-200'>Sign up here</span></p>
+          }
+        </div>
+      </div>
+    </form>
   )
 }
 
