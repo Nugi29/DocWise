@@ -1,13 +1,14 @@
 import React from 'react'
+import Login from './pages/Login'
+import { ToastContainer, toast } from 'react-toastify';
 
 const App = () => {
   return (
     <div>
-      <div className="bg-blue-500 text-white p-4 rounded-lg">
-        Hello Tailwind!
-      </div>
+      <Login />
+      <ToastContainer />
     </div>
   )
 }
 
-export default App
+export default App;
