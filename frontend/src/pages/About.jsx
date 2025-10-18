@@ -20,15 +20,15 @@ const About = () => {
         <p >WHY <span className='text-gray-700 font-semibold'>CHOOSE US</span></p>
       </div>
       <div className='flex flex-col md:flex-row mb-20'>
-        <div className='group border px-10 md:px-16 py-8 sm:py-16 flex flex-col text-[15px] hover:bg-[#5f6FFF] transition-all duration-300 text-gray-600 cursor-pointer'>
+        <div className='group border px-10 md:px-16 py-8 sm:py-16 flex flex-col text-[15px] hover:bg-primary transition-all duration-300 text-gray-600 cursor-pointer'>
           <b className='group-hover:text-white'>Efficiency:</b>
           <p className='group-hover:text-white'>Streamlined appointment scheduling that fits into your busy lifestyle.</p>
         </div>
-        <div className='group border px-10 md:px-16 py-8 sm:py-16 flex flex-col text-[15px] hover:bg-[#5f6FFF] transition-all duration-300 text-gray-600 cursor-pointer'>
+        <div className='group border px-10 md:px-16 py-8 sm:py-16 flex flex-col text-[15px] hover:bg-primary transition-all duration-300 text-gray-600 cursor-pointer'>
           <b className='group-hover:text-white'>Convenience:</b>
           <p className='group-hover:text-white'>Access to a network of trusted healthcare professionals in your area.</p>
         </div>
-        <div className='group border px-10 md:px-16 py-8 sm:py-16 flex flex-col text-[15px] hover:bg-[#5f6FFF] transition-all duration-300 text-gray-600 cursor-pointer'>
+        <div className='group border px-10 md:px-16 py-8 sm:py-16 flex flex-col text-[15px] hover:bg-primary transition-all duration-300 text-gray-600 cursor-pointer'>
           <b className='group-hover:text-white'>Personalization:</b>
           <p className='group-hover:text-white'>Tailored recommendations and reminders to help you stay on top of your health.</p>
         </div>
