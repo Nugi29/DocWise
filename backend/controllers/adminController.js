@@ -62,7 +62,7 @@ const adminLogin = async (req, res) => {
         // Check if the email and password match the admin credentials
         if (email === process.env.ADMIN_EMAIL && password === process.env.ADMIN_PASSWORD) {
 
-            const token = jwt.sign(email+password, process.env.JWT_SECRET);
+            const token = jwt.sign(email + password, process.env.JWT_SECRET);
             return res.json({ success: true, token });
 
         } else {
@@ -74,4 +74,15 @@ const adminLogin = async (req, res) => {
         res.json({ success: false, message: error.message });
     }
 };
-export { addDoctor, adminLogin };
+
+//API to get all doctors fpr admin panel
+const allDoctors = async (req, res) => {
+    try {
+        const doctors = await doctorModel.find().select("-password");
+        res.json({ success: true, doctors });
+    } catch (error) {
+        console.log(error);
+        res.json({ success: false, message: error.message });
+    }
+};
+export { addDoctor, adminLogin, allDoctors };
