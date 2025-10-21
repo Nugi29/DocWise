@@ -1,6 +1,16 @@
 import React, { useState } from 'react'
+import { useContext } from 'react';
+import { AppContext } from '../context/AppContext.jsx';
+import axios from 'axios';
+import { toast } from 'react-toastify';
+import { useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 const Login = () => {
+
+  const { backendUrl, token, setToken } = useContext(AppContext);
+  const navigate = useNavigate();
+
   const [state, setState] = useState('Sign Up');
 
   const [email, setEmail] = useState('');
@@ -9,10 +19,38 @@ const Login = () => {
 
   const onSubmitHandler = async (e) => {
     e.preventDefault();
+
+    try {
+      if (state === 'Sign Up') {
+        const { data } = await axios.post(`${backendUrl}/api/user/register`, { name, password, email });
+        if (data.success) {
+          localStorage.setItem('token', data.token);
+          setToken(data.token);
+        } else {
+          toast.error(data.message);
+        }
+      } else {
+        const { data } = await axios.post(`${backendUrl}/api/user/login`, { email, password });
+        if (data.success) {
+          localStorage.setItem('token', data.token);
+          setToken(data.token);
+        } else {
+          toast.error(data.message);
+        }
+      }
+    } catch (error) {
+      toast.error(error.message);
+    }
   };
-  
+
+  useEffect(() => {
+    if (token) {
+      navigate('/');
+    }
+  }, [token]);
+
   return (
-    <form className='min-h-[80vh] flex items-center justify-center bg-gradient-to-br px-4' onSubmit={onSubmitHandler}>
+    <form onSubmit={onSubmitHandler} className='min-h-[80vh] flex items-center justify-center bg-gradient-to-br px-4'>
       <div className='flex flex-col gap-6 m-auto items-start p-10 min-w-[340px] sm:min-w-96 bg-white border border-gray-200 rounded-2xl text-zinc-600 text-sm shadow-2xl backdrop-blur-sm'>
         <div className='w-full text-center'>
           <p className='text-3xl font-bold text-gray-800 mb-2'>{state === 'Sign Up' ? 'Create Account' : 'Welcome Back'}</p>
@@ -54,7 +92,7 @@ const Login = () => {
             required
           />
         </div>
-        <button className='bg-primary hover:bg-primary/90 text-white w-full py-3 rounded-lg text-base font-semibold transition-all duration-200 shadow-md hover:shadow-lg transform hover:-translate-y-0.5 mt-2'>
+        <button type='submit' className='bg-primary hover:bg-primary/90 text-white w-full py-3 rounded-lg text-base font-semibold transition-all duration-200 shadow-md hover:shadow-lg transform hover:-translate-y-0.5 mt-2'>
           {state === 'Sign Up' ? 'Create Account' : 'Login'}
         </button>
 
