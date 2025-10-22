@@ -1,9 +1,14 @@
 import express from 'express';
-import { loginUser, registerUser } from '../controllers/userController.js';
+import { getProfile, loginUser, registerUser, updateProfile } from '../controllers/userController.js';
+import authUser from '../middlewares/AuthUser.js';
+import upload from '../middlewares/multer.js';
 
 const router = express.Router();
 
 router.post('/register', registerUser);
 router.post('/login', loginUser);
+
+router.get('/get-profile', authUser, getProfile);
+router.post('/update-profile', upload.single('image'), authUser, updateProfile);
 
 export default router;
