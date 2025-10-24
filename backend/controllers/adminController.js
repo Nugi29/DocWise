@@ -2,6 +2,7 @@ import validator from "validator";
 import bcrypt from "bcrypt";
 import { v2 as cloudinary } from "cloudinary";
 import doctorModel from "../models/doctorModel.js";
+import userModel from "../models/userModel.js";
 import jwt from "jsonwebtoken";
 import appointmentModel from "../models/AppointmentModel.js";
 
@@ -101,7 +102,7 @@ const appointmentsAdmin = async (req, res) => {
 //API for appointment cancellation
 const appointmentCancel = async (req, res) => {
     try {
-        const {appointmentId } = req.body;
+        const { appointmentId } = req.body;
         const appointmentData = await appointmentModel.findById(appointmentId);
 
         await appointmentModel.findByIdAndUpdate(appointmentId, { cancelled: true });
@@ -119,4 +120,26 @@ const appointmentCancel = async (req, res) => {
     }
 };
 
-export { addDoctor, adminLogin, allDoctors, appointmentsAdmin, appointmentCancel };
+// API to get dashboard data for admin panel
+const adminDashboard = async (req, res) => {
+    try {
+        const doctors = await doctorModel.find({});
+        const users = await userModel.find({});
+        const appointments = await appointmentModel.find({});
+
+        const dashData = {
+            doctors: doctors.length,
+            appointments: appointments.length,
+            patients: users.length,
+            latestAppointments: appointments.reverse().slice(0, 5),
+        }
+
+        return res.json({ success: true, dashData });
+
+    } catch (error) {
+        console.log(error);
+        res.json({ success: false, message: error.message });
+    }
+};
+
+export { addDoctor, adminLogin, allDoctors, appointmentsAdmin, appointmentCancel, adminDashboard };
