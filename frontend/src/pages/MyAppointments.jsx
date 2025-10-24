@@ -49,45 +49,99 @@ const MyAppointments = () => {
     }
   };
 
-  const initPay = (order) => {
-    const options = {
-      key: import.meta.env.VITE_RAZORPAY_KEY_ID,
-      amount: order.amount,
-      currency: order.currency,
-      name: "Appointment Payment",
-      description: "Appointment Payment",
-      order_id: order.id,
-      receipt: order.receipt,
-      handler: async (response) => {
-        console.log(response);
-        try {
-          const { data } = await axios.post(`${backendUrl}/api/user/verifyRazorpay`, response, { headers: { token } });
-          if (data.success) {
-            getUserAppointments();
-            navigate('/my-appointments');
-
-          }
-        } catch (error) {
-          console.log(error);
-          toast.error(error.message);
-        }
-      }
-    }
-    const rzp = new window.Razorpay(options);
-    rzp.open();
-  };
-
-  const appointmentRazorpay = async (appointmentId) => {
+  const appointmentPayHere = async (appointmentId) => {
     try {
-      const { data } = await axios.post(`${backendUrl}/api/user/payment-razorpay`, { appointmentId }, { headers: { token } });
+      // Wait for PayHere to load (up to 5 seconds)
+      let attempts = 0;
+      const maxAttempts = 10;
+      
+      while (!window.payhere && attempts < maxAttempts) {
+        await new Promise(resolve => setTimeout(resolve, 500));
+        attempts++;
+      }
+
+      if (!window.payhere) {
+        toast.error("Payment system is loading. Please try again in a moment.");
+        return;
+      }
+
+      const { data } = await axios.post(`${backendUrl}/api/user/payment-payhere`, { appointmentId }, { headers: { token } });
       if (data.success) {
-        console.log(data.order);
-        initPay(data.order);
+        initPayHere(data.paymentData);
+      } else {
+        toast.error(data.message);
       }
     } catch (error) {
       console.log(error);
       toast.error(error.message);
     }
+  };
+
+  const initPayHere = (paymentData) => {
+    if (!window.payhere) {
+      toast.error("Payment system not loaded. Please refresh the page.");
+      return;
+    }
+
+    // PayHere payment object
+    const payment = {
+      sandbox: true,
+      merchant_id: paymentData.merchant_id,
+      return_url: paymentData.return_url,
+      cancel_url: paymentData.cancel_url,
+      notify_url: paymentData.notify_url,
+      order_id: paymentData.order_id,
+      items: paymentData.items,
+      amount: parseFloat(paymentData.amount).toFixed(2),
+      currency: paymentData.currency,
+      hash: paymentData.hash,
+      first_name: paymentData.first_name,
+      last_name: paymentData.last_name,
+      email: paymentData.email,
+      phone: paymentData.phone,
+      address: paymentData.address,
+      city: paymentData.city,
+      country: paymentData.country,
+      custom_1: paymentData.custom_1
+    };
+
+    // Show the PayHere payment modal
+    window.payhere.startPayment(payment);
+
+    // Payment completion handler
+    window.payhere.onCompleted = async function onCompleted(orderId) {
+      try {
+        const { data } = await axios.post(
+          `${backendUrl}/api/user/confirm-payment`,
+          { appointmentId: payment.custom_1, orderId: orderId },
+          { headers: { token } }
+        );
+        
+        if (data.success) {
+          toast.success("Payment completed successfully!");
+          getUserAppointments();
+        } else {
+          toast.warning("Payment completed but status update failed. Please refresh.");
+        }
+      } catch (error) {
+        console.log(error);
+        toast.warning("Payment completed but status update failed. Please refresh.");
+      }
+      
+      setTimeout(() => {
+        navigate('/my-appointments');
+      }, 2000);
+    };
+
+    // Payment dismissal handler
+    window.payhere.onDismissed = function onDismissed() {
+      toast.info("Payment was cancelled");
+    };
+
+    // Payment error handler
+    window.payhere.onError = function onError(error) {
+      toast.error("Payment failed. Please try again.");
+    };
   };
 
   useEffect(() => {
@@ -116,7 +170,7 @@ const MyAppointments = () => {
             <div></div>
             <div className='flex flex-col gap-2 justify-end'>
               {!item.cancelled && item.payment && <button  className='sm:min-w-48 py-2 border rounded text-stone-500 bg-indigo-50'>Paid</button>}
-              {!item.cancelled && !item.payment && <button onClick={() => appointmentRazorpay(item._id)} className='text-sm text-stone-500 text-center sm:min-w-48 py-2 border rounded hover:bg-primary hover:text-white transition-all duration-300'>Pay Online</button>}
+              {!item.cancelled && !item.payment && <button onClick={() => appointmentPayHere(item._id)} className='text-sm text-stone-500 text-center sm:min-w-48 py-2 border rounded hover:bg-primary hover:text-white transition-all duration-300'>Pay Online</button>}
               {!item.cancelled && <button onClick={() => cancelAppointment(item._id)} className='text-sm text-stone-500 text-center sm:min-w-48 py-2 border rounded hover:bg-red-600 hover:text-white transition-all duration-300'>Cancel Request</button>}
               {item.cancelled && <button className='sm:min-w-48 py-2 border border-red-500 rounded text-red-500'>Appointment Cancelled</button>}
             </div>

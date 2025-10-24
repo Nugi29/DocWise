@@ -5,7 +5,7 @@ import doctorModel from '../models/doctorModel.js';
 import jwt from 'jsonwebtoken';
 import { v2 as cloudinary } from "cloudinary";
 import appointmentModel from '../models/AppointmentModel.js';
-import Razorpay from 'razorpay';
+import crypto from 'crypto';
 
 //API to register user
 const registerUser = async (req, res) => {
@@ -192,45 +192,129 @@ const cancelAppointment = async (req, res) => {
     }
 };
 
-const razorpayInstance = new Razorpay({
-    key_id: process.env.RAZORPAY_KEY_ID,
-    key_secret: process.env.RAZORPAY_KEY_SECRET,
-});
-
-//API to make payment of appointment using razorpay
-const paymentRazorpay = async (req, res) => {
+//API to make payment of appointment using PayHere
+const paymentPayHere = async (req, res) => {
     try {
         const { appointmentId } = req.body;
+        const { userId } = req.body;
+        
         const appointmentData = await appointmentModel.findById(appointmentId);
         if (!appointmentData || appointmentData.cancelled) {
-            return res.json({ success: false, message: "Appointment not found" });
+            return res.json({ success: false, message: "Appointment not found or cancelled" });
         }
-        // creating options for razorpay payment
-        const options = {
-            amount: appointmentData.amount * 100,
-            currency: process.env.CURRENCY,
-            receipt: `receipt_order_${appointmentId}`,
+
+        // Verify the appointment belongs to the user
+        if (appointmentData.userId !== userId) {
+            return res.json({ success: false, message: "Unauthorized" });
+        }
+
+        const userData = await userModel.findById(userId);
+        
+        // Verify environment variables are set
+        if (!process.env.PAYHERE_MERCHANT_ID || !process.env.PAYHERE_MERCHANT_SECRET) {
+            return res.json({ success: false, message: "PayHere credentials not configured" });
+        }
+        
+        // Generate unique order ID
+        const orderId = `ORDER_${appointmentId}_${Date.now()}`;
+        
+        // Prepare PayHere payment data
+        const merchantId = process.env.PAYHERE_MERCHANT_ID;
+        const merchantSecret = process.env.PAYHERE_MERCHANT_SECRET;
+        const amount = appointmentData.amount.toFixed(2);
+        const currency = 'LKR';
+        
+        const paymentData = {
+            merchant_id: merchantId,
+            return_url: process.env.FRONTEND_URL + '/my-appointments',
+            cancel_url: process.env.FRONTEND_URL + '/my-appointments',
+            notify_url: process.env.BACKEND_URL + '/api/user/verify-payhere',
+            order_id: orderId,
+            items: `Appointment with Dr. ${appointmentData.docData.name}`,
+            currency: currency,
+            amount: amount,
+            first_name: userData.name.split(' ')[0] || 'User',
+            last_name: userData.name.split(' ').slice(1).join(' ') || 'Name',
+            email: userData.email,
+            phone: userData.phone || '0000000000',
+            address: userData.address?.line1 || 'N/A',
+            city: userData.address?.line2 || 'Colombo',
+            country: 'Sri Lanka',
+            custom_1: appointmentId
         };
 
-        // creation of an order
-        const order = await razorpayInstance.orders.create(options);
-        return res.json({ success: true, order });
+        // Generate hash for security
+        const hashedSecret = crypto.createHash('md5').update(merchantSecret).digest('hex').toUpperCase();
+        const hashString = `${merchantId}${orderId}${amount}${currency}${hashedSecret}`;
+        const hash = crypto.createHash('md5').update(hashString).digest('hex').toUpperCase();
+        
+        paymentData.hash = hash;
+
+        return res.json({ success: true, paymentData });
     } catch (error) {
         console.log(error);
         return res.json({ success: false, message: error.message });
     }
 };
 
-// API to verify payment of razorpay
-const verifyRazorpayPayment = async (req, res) => {
+// API to confirm payment from frontend after PayHere success
+const confirmPayment = async (req, res) => {
     try {
-        const { razorpay_order_id } = req.body;
-        const orderInfo = await razorpayInstance.orders.fetch(razorpay_order_id);
-        if (orderInfo.status === 'paid') {
-            await appointmentModel.findByIdAndUpdate(orderInfo.receipt, { payment: true });
+        const { appointmentId, orderId } = req.body;
+        const { userId } = req.body;
+
+        // Verify appointment exists and belongs to user
+        const appointment = await appointmentModel.findById(appointmentId);
+        
+        if (!appointment) {
+            return res.json({ success: false, message: "Appointment not found" });
+        }
+
+        if (appointment.userId !== userId) {
+            return res.json({ success: false, message: "Unauthorized" });
+        }
+
+        // Update payment status
+        await appointmentModel.findByIdAndUpdate(appointmentId, { payment: true });
+        
+        return res.json({ success: true, message: "Payment confirmed successfully" });
+    } catch (error) {
+        console.log(error);
+        return res.json({ success: false, message: error.message });
+    }
+};
+
+// API to verify payment of PayHere (webhook - for production)
+const verifyPayHerePayment = async (req, res) => {
+    try {
+        const {
+            merchant_id,
+            order_id,
+            payhere_amount,
+            payhere_currency,
+            status_code,
+            md5sig,
+            custom_1
+        } = req.body;
+
+        // Verify the payment signature
+        const merchantSecret = process.env.PAYHERE_MERCHANT_SECRET;
+        const hashedSecret = crypto.createHash('md5').update(merchantSecret).digest('hex').toUpperCase();
+        const amountFormatted = parseFloat(payhere_amount).toFixed(2);
+        
+        const hashString = `${merchant_id}${order_id}${amountFormatted}${payhere_currency}${status_code}${hashedSecret}`;
+        const hash = crypto.createHash('md5').update(hashString).digest('hex').toUpperCase();
+
+        if (hash !== md5sig) {
+            return res.json({ success: false, message: "Payment verification failed - Invalid signature" });
+        }
+
+        // Check if payment was successful (status_code 2 means success)
+        if (status_code === '2') {
+            await appointmentModel.findByIdAndUpdate(custom_1, { payment: true });
             return res.json({ success: true, message: "Payment successful" });
         } else {
-            return res.json({ success: false, message: "Payment not verified" });
+            return res.json({ success: false, message: "Payment not completed" });
         }
     } catch (error) {
         console.log(error);
@@ -239,4 +323,4 @@ const verifyRazorpayPayment = async (req, res) => {
 };
 
 
-export { registerUser, loginUser, getProfile, updateProfile, bookAppointment, listAppointment, cancelAppointment, paymentRazorpay, verifyRazorpayPayment };
+export { registerUser, loginUser, getProfile, updateProfile, bookAppointment, listAppointment, cancelAppointment, paymentPayHere, confirmPayment, verifyPayHerePayment };
