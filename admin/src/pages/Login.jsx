@@ -3,6 +3,7 @@ import { assets } from '../assets/assets_admin/assets.js'
 import { AdminContext } from '../context/AdminContext.jsx';
 import axios from 'axios';
 import { toast } from 'react-toastify';
+import { DoctorContext } from '../context/DoctorContext.jsx';
 
 
 const Login = () => {
@@ -11,25 +12,34 @@ const Login = () => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
 
-    const {setAToken,backendUrl}= useContext(AdminContext);
+    const { setAToken, backendUrl } = useContext(AdminContext);
+    const { setDToken } = useContext(DoctorContext);
 
     const onSubmitHandler = async (e) => {
         e.preventDefault();
         try {
             if (state === 'Admin') {
-                const {data} = await axios.post(`${backendUrl}/api/admin/login`, {email, password}); 
+                const { data } = await axios.post(`${backendUrl}/api/admin/login`, { email, password });
                 if (data.success) {
                     localStorage.setItem('aToken', data.token);
                     setAToken(data.token);
-                }else{
+                } else {
                     toast.error(data.message);
                 }
-                
-            }else{
 
+            } else {
+                const { data } = await axios.post(`${backendUrl}/api/doctor/login`, { email, password });
+                if (data.success) {
+                    localStorage.setItem('dToken', data.token);
+                    setDToken(data.token);
+                    console.log(data.token);
+                    
+                } else {
+                    toast.error(data.message);
+                }
             }
         } catch (error) {
-            
+
         }
     };
 
@@ -39,17 +49,17 @@ const Login = () => {
                 <p className='text-2xl font-semibold m-auto'><span className='text-primary'>{state}</span> Login</p>
                 <div className='w-full'>
                     <p>Email</p>
-                    <input onChange={(e)=>setEmail(e.target.value)} value={email} className='border border-[#DADADA] rounded w-full p-2 m-1' type="email" required />
+                    <input onChange={(e) => setEmail(e.target.value)} value={email} className='border border-[#DADADA] rounded w-full p-2 m-1' type="email" required />
                 </div>
                 <div className='w-full'>
                     <p>Password</p>
-                    <input onChange={(e)=>setPassword(e.target.value)} value={password} className='border border-[#DADADA] rounded w-full p-2 m-1' type="password" required />
+                    <input onChange={(e) => setPassword(e.target.value)} value={password} className='border border-[#DADADA] rounded w-full p-2 m-1' type="password" required />
                 </div>
                 <button className='bg-primary text-white w-full py-2 rounded-md text-base'>Login</button>
                 {
-                    state === 'Admin' 
-                    ? <p>Doctor Login? <span  className='text-primary cursor-pointer underline' onClick={() => setState('Doctor')}>Click here</span></p>
-                    : <p>Admin Login? <span className='text-primary cursor-pointer underline' onClick={() => setState('Admin')}>Click here</span></p>
+                    state === 'Admin'
+                        ? <p>Doctor Login? <span className='text-primary cursor-pointer underline' onClick={() => setState('Doctor')}>Click here</span></p>
+                        : <p>Admin Login? <span className='text-primary cursor-pointer underline' onClick={() => setState('Admin')}>Click here</span></p>
                 }
             </div>
         </form>
