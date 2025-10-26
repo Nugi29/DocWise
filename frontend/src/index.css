@@ -2,15 +2,26 @@
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap');
 
 @theme {
-  --color-primary: #5f6FFF;
+  --color-primary: #2E7D32;
 }
 
 *{
   font-family: Outfit;
 }
 
+/* Smooth scrolling for all elements */
+html {
+  scroll-behavior: smooth;
+  scroll-padding-top: 80px; /* Offset for fixed headers if any */
+}
+
+/* Enhanced smooth scrolling with easing */
+* {
+  scroll-behavior: smooth;
+}
+
 :root {
-  --primary-color: #5f6FFF;
+  --primary-color: #2E7D32;
 }
 
 .bg-primary {
