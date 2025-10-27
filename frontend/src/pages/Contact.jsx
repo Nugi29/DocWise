@@ -11,8 +11,8 @@ const Contact = () => {
         <img className='w-full md:max-w-[360px]' src={assets.contact_image} alt="" />
         <div className='flex flex-col justify-center items-start gap-6'>
           <p className='font-semibold text-lg text-gray-600'>Our OFFICE</p>
-          <p className='text-gray-500'>54709 Willms Station <br /> Suite 350, Washington, SL</p>
-          <p className='text-gray-500'>Tel: +94 555 0132 <br /> Email: nugidev@gmail.com</p>
+          <p className='text-gray-500'>123 Medical Street, <br /> Colombo 07,<br /> Sri Lanka</p>
+          <p className='text-gray-500'>Tel: +94 555 0132 <br /> Email: careers@docwise.com</p>
           <p className='font-semibold text-lg text-gray-600'>Careers at DOCWISE</p>
           <p className='text-gray-500'>Learn more about our teams and job openings.</p>
           <button className='border border-black px-8 py-4 text-sm hover:bg-black hover:text-white' type="button">Explore Jobs</button>
