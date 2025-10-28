@@ -1,16 +1,87 @@
-# React + Vite
+# 🏥 Doc Wise – Patient Frontend (React)
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Patient-facing web application to discover medical specialists, book appointments, pay via PayHere, and manage profiles and appointments.
 
-Currently, two official plugins are available:
+🌐 **Live Site:** https://doc-wise-health.vercel.app
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## 🛠️ Tech Stack
 
-## React Compiler
+- ⚛️ **React 19** with **Vite 7**
+- 🛣️ **React Router 7**
+- 🎨 **Tailwind CSS 4** (via @tailwindcss/vite)
+- 📡 **Axios**
+- 🔔 **React Toastify**
 
-The React Compiler is not enabled on this template. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## 📜 Scripts
 
-## Expanding the ESLint configuration
+```bash
+npm run dev      # 🚀 Start Vite dev server (port 5173)
+npm run build    # 🏗️ Build for production
+npm run preview  # 👀 Preview production build
+```
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+## ⚙️ Environment Configuration
+
+Create `frontend/.env`:
+
+```env
+VITE_BACKEND_URL=http://localhost:4000
+```
+
+`AppContext` uses this URL to call the API under `/api/user` and `/api/doctor`.
+
+## 🔐 Authentication
+
+- 🔑 User login/register returns a JWT stored in `localStorage` as `token`
+- 📤 Authenticated requests include header: `{ token: <jwt> }`
+
+## ✨ Key Capabilities
+
+- 🔍 **Browse Doctors** and filter by speciality
+- 👨‍⚕️ **View Doctor Profiles** with fees and availability
+- 📅 **Book Appointments** (date/time slots)
+- 💳 **Pay with PayHere** (LKR)
+- 📋 **View/Cancel Appointments**
+- 👤 **Manage Profile** with avatar upload (multipart `image`)
+
+## 💻 Development
+
+```bash
+npm install
+npm run dev
+```
+
+🌐 Dev server runs at **http://localhost:5173**
+
+⚠️ Ensure the backend is running and `VITE_BACKEND_URL` is set correctly.
+
+## 🏗️ Production Build
+
+```bash
+npm run build
+npm run preview
+```
+
+The build output is in `dist/` and can be deployed to any static host (Vercel, Netlify, etc.).
+
+## 📁 Folder Structure
+
+```
+src/
+├── 🧩 components/    # Header, Navbar, Footer, TopDoctors, etc.
+├── 🔌 context/       # AppContext (API calls, auth token, user data)
+└── 📄 pages/
+    ├── Home.jsx
+    ├── Doctors.jsx
+    ├── Appointment.jsx
+    ├── MyAppointments.jsx
+    ├── MyProfile.jsx
+    ├── Login.jsx
+    ├── About.jsx
+    └── Contact.jsx
+```
+
+## 🔧 Troubleshooting
+
+- ❌ **Unauthorized**: Confirm `token` is present in headers and matches backend `JWT_SECRET`
+- 💳 **PayHere flow not returning**: Verify `FRONTEND_URL` and `BACKEND_URL` in backend env as they're used by the payment payload
